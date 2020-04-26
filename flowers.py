@@ -11,7 +11,7 @@ def average_breed_tries_comp(fl1, fl2):
 
     Outputs True if fl1 is better than fl2
     """
-    order = ['power', 'tests', 'steps']
+    order = ['power', 'tests', 'step']
     for crit in order:
         if getattr(fl1, crit) < getattr(fl2, crit):
             return True
@@ -57,7 +57,8 @@ def get_color(fls, typ):
 
 class Flower:
 
-    def __init__(self, typ, genes, step=0, power=0, tests=0, parent_genes=None, testing=None):
+    def __init__(self, typ, genes, step=0, power=0, tests=0, parent_genes=None, testing=None, p=None):
+        self.p = p
         self.typ = typ
         self.genes = genes
         self.step = step
@@ -73,12 +74,14 @@ class Flower:
                                            self.step, self.power, self.tests)
 
     def prnt(self):
-        return "<%s | %6s | %d %2d <- %s%s>" %\
+        return "<%s | %6s | %d %2d <- %s%s%s>" %\
                (self.genes, self.color_dict[int(get_color(self.genes, self.typ))], self.step, self.power,
                 self.parent_genes or 'Seed',
                 "" if self.test_seed is None else " [alt:%s breed with %s for %s%s]" %
                                                   (self.alt, self.test_seed, self.ac_cols,
-                                                   "" if len(self.rej_cols) == 0 else " not %s" % self.rej_cols))
+                                                   "" if len(self.rej_cols) == 0 else " not %s" % self.rej_cols),
+                "" if self.p is None else " [%s %%]" % (int(100 * self.p) if (100 * self.p) % 1 < 0.01 else
+                                                        "%.1f" % (100 * self.p)))
 
 
 class Breeder:
@@ -145,12 +148,14 @@ class Breeder:
             elif big:
                 print(fl.prnt())
 
-        print("-----")
         gns = set([fl.genes for fl in fls])
+        todo = set([p for fl in fls if fl.parent_genes is not None for p in fl.parent_genes if p not in gns])
+        todo = todo | set([fl.test_seed for fl in fls if fl.test_seed is not None if fl.test_seed not in gns])
+
         # Also the needed ones
         if not big:
-            todo = set([p for fl in fls if fl.parent_genes is not None for p in fl.parent_genes if p not in gns])
-            todo = todo | set([fl.test_seed for fl in fls if fl.test_seed is not None if fl.test_seed not in gns])
+            if len(todo):
+                print("-----")
             while len(todo) > 0:
                 p = todo.pop()
                 pa = self.pool[p]
@@ -158,6 +163,8 @@ class Breeder:
                 for par in pa.parent_genes:
                     if par not in gns:
                         todo.add(par)
+                if pa.test_seed is not None and pa.test_seed not in gns:
+                    todo.add(pa.test_seed)
 
     def all_pos(self, intermediate_results=False):
         """
@@ -165,7 +172,7 @@ class Breeder:
         """
         while self.step():
             if intermediate_results:
-                self.result(small=False)
+                self.result(big=True)
                 print("#")
 
     def step(self):
@@ -186,6 +193,7 @@ class Breeder:
         for fl in new_pool:
             if fl.genes not in self.pool:
                 self.pool[fl.genes] = fl
+                change = True
             else:
                 if self.comp(fl, self.pool[fl.genes]):
                     self.pool[fl.genes] = fl
@@ -216,7 +224,7 @@ class Breeder:
         unique_cols = [c for c in cnts if cnts[c] == 1]
         fls = [Flower(fl1.typ, tuple(ch), step=max(fl1.step, fl2.step) + 1,
                       power=fl1.power + (fl2.power if fl1.genes != fl2.genes else 0) + 1/pr,
-                      parent_genes=(fl1.genes, fl2.genes), tests=fl1.tests + fl2.tests)
+                      parent_genes=(fl1.genes, fl2.genes), tests=fl1.tests + fl2.tests, p=pr)
                for ch, pr in zip(childs, probs) if get_color(tuple(ch), self.typ) in unique_cols]
 
         # If testing is allowed
@@ -298,7 +306,7 @@ class Breeder:
                                    parent_genes=(fl1.genes, fl2.genes),
                                    power=(fl1.power + (fl2.power if fl1.genes != fl2.genes else 0) +
                                           test_seed.power + 1/pr1 + (1 + pr2/pr1) * level),
-                                   tests=fl1.tests + fl2.tests + test_seed.tests + 1,
+                                   tests=fl1.tests + fl2.tests + test_seed.tests + 1, p=pr1,
                                    testing=[test_seed.genes, ac_cols, rej_cols, ch2])]
 
         return fls
@@ -393,7 +401,7 @@ if __name__ == '__main__':
 
     for typ in seeds.keys():
         print(typ)
-        br = Breeder(typ=typ, test=4)
+        br = Breeder(typ=typ, test=3)
         br.all_pos()
         br.result()
         print('*****')
@@ -413,6 +421,15 @@ if __name__ == '__main__':
         print(typ)
         br = Breeder(typ=typ, test=3)
         br.all_pos()
-        br.result(small=False)
+        br.result(big=True)
+        print('*****')
+
+    print('~~~~~')
+
+    for typ in seeds.keys():
+        print(typ)
+        br = Breeder(typ=typ)
+        br.all_pos()
+        br.result(big=True)
         print('*****')
 
