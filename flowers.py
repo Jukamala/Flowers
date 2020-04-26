@@ -2,25 +2,49 @@ import numpy as np
 from collections import Counter
 
 
+def average_breed_tries_comp(fl1, fl2):
+    """
+    Create an order on flowers which prefers flowers that
+    need a smaller number of breeding tries to breed (in average).
+
+    This is the order used by standard.
+
+    Outputs True if fl1 is better than fl2
+    """
+    order = ['power', 'tests', 'steps']
+    for crit in order:
+        if getattr(fl1, crit) < getattr(fl2, crit):
+            return True
+        elif getattr(fl1, crit) > getattr(fl2, crit):
+            return False
+    return False
+
+
 def get_color(fls, typ):
     """
-    Get the color given the genes
+    Input:
+    fls - List of Flowers or flower genes
+    typ - the type of the flower
 
-    0 - weiß
-    1 - schwarz
+    Output:
+    A list containing numbers representing the colors:
+    0 - white
+    1 - black
     2 - pink
-    3 - violet
-    4 - rot
-    5 - gelb
+    3 - purple
+    4 - red
+    5 - yellow
     6 - orange
-    7 - blau
-    8 - grün
+    7 - blue
+    8 - green
     """
+    # Convert to list of genes
     if not isinstance(fls, list):
         fls = [fls]
     if isinstance(fls[0], Flower):
         fls = list(map(lambda f: f.genes, fls))
 
+    # Search in the colormap given below
     if len(fls[0]) == 4:
         i, j, k, l = np.transpose(fls)
         return colormap[typ][i, j, k, l]
@@ -28,7 +52,7 @@ def get_color(fls, typ):
         i, j, k = np.transpose(fls)
         return colormap[typ][i, j, k]
     else:
-        raise ValueError
+        raise ValueError("Wrong flower type %s chose from:\n%s" % (typ, colormap.keys()))
 
 
 class Flower:
@@ -52,26 +76,64 @@ class Flower:
         return "<%s | %6s | %d %2d <- %s%s>" %\
                (self.genes, self.color_dict[int(get_color(self.genes, self.typ))], self.step, self.power,
                 self.parent_genes or 'Seed',
-                "" if self.test_seed is None else "[alt:%s breed with %s for %s]" %
-                                                  (self.alt, self.test_seed, self.ac_cols))
+                "" if self.test_seed is None else " [alt:%s breed with %s for %s%s]" %
+                                                  (self.alt, self.test_seed, self.ac_cols,
+                                                   "" if len(self.rej_cols) == 0 else " not %s" % self.rej_cols))
 
 
 class Breeder:
+    """
+    A breeder that can be used to calculate optimal routes.
+    It starts with a pool of flowers and combines them iteratively in all possible combinations.
 
-    def __init__(self, typ='rose', test=0):
+    e.g.:
+    '''
+    # Start from seeds
+    br = Breeder(typ='rose')
+    br.all_pos()
+    br.result()
+
+    # Start with flowers from islands included and allow tests
+    typ = 'rose'
+    pool = seeds[typ] + [Flower(typ, (2, 2, 1, 1)), Flower(typ, (2, 0, 0, 2))
+    br = Breeder(typ=typ, pool=pool, test=3)
+    br.all_pos()
+    br.result()
+
+    # Show routes for all hybrids
+    br = Breeder(typ='hyacinth', test=3)
+    br.all_pos()
+    br.result(all=True)
+    '''
+    """
+
+    def __init__(self, typ='rose', pool=None, test=0, comp=average_breed_tries_comp):
         """
-        test - 0: no tests
-             - 1: tests that work after 1st try with seed flower
-             - 2: tests that work after 1st try with flowers in pool
-             - 3: tests that work on correct flower after 1st try with seed flower
-             - 4: tests that work on correct flower after 1st try with flowers in pool
+        Parameters:
+        typ - The type of the flower, one of:
+              [rose, cosmos, lilly, pansy, hyacinth, tulip, mum, windflower]
+        pool - The flowers to start with. Defaults to the flowers obtained from seeds
+        test - Sometimes a breeding step can get you two genetically different variants.
+               A little extra work can be done to determine which one to use. This sets what test are allowed
+            0 - no tests
+            1 - tests that work after the first try and use seed flower
+            2 - tests that work after the first try and use any flowers in pool
+            3 - any test that uses seed flowers
+            4 - any test that uses any flower in pool
+        comp - A function that takes two flowers as input and returns True if the first is better.
+               Defaults to a comparison on the average breeding tries.
         """
         self.typ = typ
         self.seeds = seeds[typ]
-        self.pool = {fl.genes: fl for fl in seeds[typ]}
+        self.pool = {fl.genes: fl for fl in pool or seeds[typ]}
         self.test = test
+        self.comp = comp
 
-    def result(self, small=True):
+    def result(self, big=False):
+        """
+        Print the best path to every color that was found
+        When big is True paths to all possible hybrids are printed
+        """
         seen = set()
         fls = set()
         for fl in sorted(self.pool.values(), key=lambda fl: fl.power):
@@ -80,14 +142,15 @@ class Breeder:
                 seen.add(fl_c)
                 fls.add(fl)
                 print(fl.prnt())
-            elif small is False:
+            elif big:
                 print(fl.prnt())
 
         print("-----")
         gns = set([fl.genes for fl in fls])
         # Also the needed ones
-        if small:
+        if not big:
             todo = set([p for fl in fls if fl.parent_genes is not None for p in fl.parent_genes if p not in gns])
+            todo = todo | set([fl.test_seed for fl in fls if fl.test_seed is not None if fl.test_seed not in gns])
             while len(todo) > 0:
                 p = todo.pop()
                 pa = self.pool[p]
@@ -96,13 +159,24 @@ class Breeder:
                     if par not in gns:
                         todo.add(par)
 
-    def all_pos(self):
-        old_pool_len = 0
-        while len(self.pool) != old_pool_len:
-            old_pool_len = len(self.pool)
-            self.step()
+    def all_pos(self, intermediate_results=False):
+        """
+        Breed until to breeding can be done to improve the pool of flowers
+        """
+        while self.step():
+            if intermediate_results:
+                self.result(small=False)
+                print("#")
 
     def step(self):
+        """
+        Performs a breeding step on the pool of flowers currently available.
+        Breed all pairs of available flowers.
+        Take new flowers in to the pool and update flowers when better origins are found.
+        Output:
+        Returns if something was changed in this step.
+        """
+        change = False
         pool_fls = list(self.pool.values())
         new_pool = []
         for i in range(len(pool_fls)):
@@ -113,24 +187,41 @@ class Breeder:
             if fl.genes not in self.pool:
                 self.pool[fl.genes] = fl
             else:
-                if fl.power < self.pool[fl.genes].power:
+                if self.comp(fl, self.pool[fl.genes]):
                     self.pool[fl.genes] = fl
+                    change = True
+        return change
 
     def breed(self, fl1, fl2):
+        """
+        Input:
+        fl1, fl2 - Two flowers to breed
+        Dependencies:
+        Depends on what test are allowed. See __init__ for more info.
+        Output:
+        A list of all offspring whose genes are known after breeding.
+        (This means this list is incomplete in a sense; e.g.:
+         Red and White Roses can create pink roses,
+         but there is no easy way to know which genes they have, so they wont be listed here)
+        A list of Flower objects are returned - to keep track of parents, chances, testing, etc.
+        """
         if fl1.typ != fl2.typ:
-            raise ValueError
+            raise ValueError("Can only breed Flowers of the same type")
 
+        # All offspring
         childs, probs = self.crossover(fl1, fl2)
-        # print(fl1, fl2, childs, probs)
         cols = get_color(childs, typ=self.typ)
         cnts = Counter(cols)
+        # Offspring without different variants
         unique_cols = [c for c in cnts if cnts[c] == 1]
-        fls = [Flower(fl1.typ, tuple(ch), step=max(fl1.step, fl2.step) + 1, power=fl1.power + fl2.power + 1/pr,
+        fls = [Flower(fl1.typ, tuple(ch), step=max(fl1.step, fl2.step) + 1,
+                      power=fl1.power + (fl2.power if fl1.genes != fl2.genes else 0) + 1/pr,
                       parent_genes=(fl1.genes, fl2.genes), tests=fl1.tests + fl2.tests)
                for ch, pr in zip(childs, probs) if get_color(tuple(ch), self.typ) in unique_cols]
 
+        # If testing is allowed
         if self.test >= 1:
-            # 1st try seed test
+            # Offspring that comes in two variants
             testable_cols = [c for c in cnts if cnts[c] == 2]
             test_sets = {c: [] for c in testable_cols}
             for ch, pr in zip(childs, probs):
@@ -138,48 +229,88 @@ class Breeder:
                 if cc in testable_cols:
                     test_sets[cc] += [(ch, pr)]
 
-            for (ch1, pr1), (ch2, pr2) in test_sets.values():
-                goodness = 10
-                testseed = None
+            # Add other direction for more readable code
+            test_sets = {k: [v, [v[1], v[0]]] for k, v in test_sets.items()}
+
+            for (ch1, pr1), (ch2, pr2) in [t for test in test_sets.values() for t in test]:
+                # See if it is possible to isolate ch1 from ch2
+                # Level of a test is the average tries it takes to determine if a flower is the correct one
+                level = float('inf')
+                goodness = float('inf')
+                test_seed = None
                 ac_cols = None
                 rej_cols = None
-                alt = None
-                for seed in self.seeds if self.test == 1 else self.pool.values():
-                    cols1, _ = self.crossover(tuple(ch1), seed)
-                    cols2, _ = self.crossover(tuple(ch2), seed)
-                    cols1 = list(map(tuple, cols1))
-                    cols2 = list(map(tuple, cols2))
+                for seed in self.seeds if self.test in [1, 3] else self.pool.values():
+                    # Offspring with the test flower
+                    genes1, chances1 = self.crossover(tuple(ch1), seed)
+                    genes2, chances2 = self.crossover(tuple(ch2), seed)
+                    genes1 = list(map(tuple, genes1))
+                    genes2 = list(map(tuple, genes2))
+                    cols1 = get_color(genes1, typ=self.typ)
+                    cols2 = get_color(genes2, typ=self.typ)
                     if self.test <= 2:
-                        # 1st try
+                        # 1st try tests that don't have common colors.
                         if len(set(cols1) & set(cols2)) == 0:
                             # Good test
                             gd = len(set(cols1) | set(cols2))
                             if gd < goodness:
-                                testseed = seed
+                                level = 1
+                                test_seed = seed
                                 ac_cols = set(cols1)
                                 rej_cols = set(cols2)
-                        # 1st try on correct
-                        else:
-                            pass
-                if testseed is not None:
-                    print(fl1, fl2, testseed, get_color(tuple(ch1), self.typ))
-                    fls += [Flower(fl1.typ, tuple(ch1), step=max(fl1.step, fl2.step, testseed.step) + 1,
+                    else:
+                        # Other test.
+                        # Has accepted colors. When you see them the flower is the correct one.
+                        # Has rejected colors. When you see them the flower is the incorrect one.
+
+                        # Chances to get a certain color
+                        col_chances1 = dict()
+                        col_chances2 = dict()
+                        for c, p in zip(genes1, chances1):
+                            cc = int(get_color(c, typ=self.typ))
+                            col_chances1[cc] = col_chances1.get(cc, 0) + p
+                        for c, p in zip(genes2, chances2):
+                            cc = int(get_color(c, typ=self.typ))
+                            col_chances2[cc] = col_chances2.get(cc, 0) + p
+
+                        # Chance that a random variant breeds with the test flower and creates a flower that
+                        # could have come from both variants
+                        ths_union = sum([pr1 * col_chances1[x] + pr2 * col_chances2[x]
+                                         for x in set(cols1) & set(cols2)]) / (pr1 + pr2)
+                        # Chance that a random variant breed with the test flower and from the result
+                        # it can be concluded that the variant was indeed <ch>
+                        ths_acc = sum([pr1 * col_chances1[x] for x in set(cols1) - set(cols2)]) / (pr1 + pr2)
+                        if ths_acc == 0:
+                            # Testing is useless
+                            continue
+                        # The average needed steps to get to a result with this test.
+                        ths_level = ths_acc / (1 - ths_union)**2
+                        if ths_level < level:
+                            level = ths_level
+                            test_seed = seed
+                            ac_cols = set(cols1) - set(cols2)
+                            rej_cols = set(cols2) - set(cols1)
+
+                if test_seed is not None:
+                    # Combine power, steps, etc.
+                    # Note that breeding with itself doesn't result in extra cost
+                    fls += [Flower(fl1.typ, tuple(ch1), step=max(fl1.step, fl2.step, test_seed.step) + 1,
                                    parent_genes=(fl1.genes, fl2.genes),
-                                   power=fl1.power + fl2.power + testseed.power + 1/pr1 + ,
-                                   tests=fl1.tests + fl2.tests + testseed.tests + 1,
-                                   testing=[testseed.genes, ac_cols, rej_cols, ch2])]
-                    fls += [Flower(fl1.typ, tuple(ch2), step=max(fl1.step, fl2.step, testseed.step) + 1,
-                                   parent_genes=(fl1.genes, fl2.genes),
-                                   power=fl1.power + fl2.power + testseed.power + ((pr1 + pr2) / pr1**2),
-                                   tests=fl1.tests + fl2.tests + testseed.tests + 1,
-                                   testing=[testseed.genes, rej_cols, ac_cols, ch1])]
+                                   power=(fl1.power + (fl2.power if fl1.genes != fl2.genes else 0) +
+                                          test_seed.power + 1/pr1 + (1 + pr2/pr1) * level),
+                                   tests=fl1.tests + fl2.tests + test_seed.tests + 1,
+                                   testing=[test_seed.genes, ac_cols, rej_cols, ch2])]
 
         return fls
 
     def crossover(self, fl1, fl2):
         """
-        returns offspring genes and probabilities
+        Input:
+        fl1, fl2: Two Flowers (or genes of Flowers) to do a crossover
+        Output:
+        All possible offspring genes with their probabilities
         """
+        # Convet to genes if Flowers are given
         if isinstance(fl1, Flower):
             fl1 = fl1.genes
         if isinstance(fl2, Flower):
@@ -190,7 +321,9 @@ class Breeder:
         for g1, g2 in zip(fl1, fl2):
             nout = []
             nch = []
+            # For every gene
             for o, p in zip(out, ch):
+                # Mendelian rules
                 if g1 == 1 and g2 == 1:
                     nout += [o + [0], o + [1], o + [2]]
                     nch += [0.25 * p, 0.5 * p, 0.25 * p]
@@ -255,15 +388,12 @@ seeds = {'rose': [Flower('rose', (0, 0, 1, 0)), Flower('rose', (0, 2, 2, 0)), Fl
          'windflower': [Flower('windflower', (0, 0, 1)), Flower('windflower', (0, 2, 2)),
                         Flower('windflower', (2, 0, 2))]}
 
+
 if __name__ == '__main__':
 
-    br = Breeder('hyacinth', test=3)
-    f1 = Flower('hyacinth', (0, 0, 1))
-    brrr = br.breed(f1, f1)
-    [print(f.prnt()) for f in brrr]
     for typ in seeds.keys():
         print(typ)
-        br = Breeder(typ=typ, test=2)
+        br = Breeder(typ=typ, test=4)
         br.all_pos()
         br.result()
         print('*****')
@@ -272,7 +402,16 @@ if __name__ == '__main__':
 
     for typ in seeds.keys():
         print(typ)
-        br = Breeder(typ=typ)
+        br = Breeder(typ=typ, test=0)
+        br.all_pos()
+        br.result()
+        print('*****')
+
+    print('~~~~~')
+
+    for typ in seeds.keys():
+        print(typ)
+        br = Breeder(typ=typ, test=3)
         br.all_pos()
         br.result(small=False)
         print('*****')
