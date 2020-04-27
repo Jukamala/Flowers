@@ -58,6 +58,16 @@ where `{alt Genes}` are the genes of the other flower variant of the same color 
 can come from the same parents, `{Test Genes}` the genes of the flower to do the test with.
 If your test yields a color from `{accepted colors}` it is safe to continue.
 
+#### Testing
+Testing steps are what makes breeding route so much faster than the reliance on good routes.
+Many runs of the algorithm showed that there is surprisingly only on test which was useful at all:\
+Test a flower variant with a seed flower. The desired flower variant can create offspring that the other can't.
+The wrong flower variant is not detectable.
+
+Simpler test where you can detect wrong or correct flowers are to weak to make a difference.
+Stronger test where you can test against other flowers except seed flowers don't allow
+for better and faster routes because getting other flowers as testers is too expensive.
+
 ### Further explanation and proofs:
 
 The characteristic that is the hardest to obtain is the excepted breeding 'trys',
@@ -138,4 +148,8 @@ Randomly chose one of the flowers on the field to have offspring. Generate rando
 An exact modelling of this would be to complicated but it is not far away from our model:
 We can assume we get a certain flower in our field with the same chances that we get
 a certain flower from the parents.
+
+#### TODOS
+
+Make lists that also include the mystery island flowers.
 
