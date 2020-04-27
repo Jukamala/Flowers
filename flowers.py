@@ -9,15 +9,17 @@ def average_breed_tries_comp(fl1, fl2):
 
     This is the order used by standard.
 
-    Outputs True if fl1 is better than fl2
+    Outputs 1  if fl1 is better than fl2
+            0  if they are equal
+            -1 else
     """
     order = ['power', 'tests', 'step']
     for crit in order:
         if getattr(fl1, crit) < getattr(fl2, crit):
-            return True
+            return 1
         elif getattr(fl1, crit) > getattr(fl2, crit):
-            return False
-    return False
+            return -1
+    return 0
 
 
 def get_color(fls, typ):
@@ -78,6 +80,9 @@ class Flower:
     def prnt(self):
         genes = self.genes or "Generic"
         gene_str = "%9s" % str(genes) if self.typ != 'rose' else "%12s" % str(genes)
+        parent_str = 'Seed' if self.parent_genes is None else\
+            "{%s}" % " | ".join(map(lambda p: "%s - %6s" %
+                                             (p, self.color_dict[int(get_color(p, self.typ))]), self.parent_genes))
         ac_cols = ",".join([self.color_dict[c] for c in self.ac_cols])\
             if self.ac_cols is not None and len(self.ac_cols) > 0 else ""
         rej_cols = "not {%s}" % ",".join([self.color_dict[c] for c in self.ac_cols])\
@@ -88,7 +93,7 @@ class Flower:
         chance_str = "" if self.p is None else " [%s %%]" % (int(100 * self.p) if (100 * self.p) % 1 < 0.01 else
                                                              "%.1f" % (100 * self.p))
         return "<%s | %6s | %d %2d <- %s%s%s>" %\
-               (gene_str, col, self.step, self.power, self.parent_genes or 'Seed', test_str, chance_str)
+               (gene_str, col, self.step, self.power, parent_str, test_str, chance_str)
 
 
 class Breeder:
@@ -202,7 +207,7 @@ class Breeder:
                 self.pool[fl.genes or fl.generic] = fl
                 change = True
             else:
-                if self.comp(fl, self.pool[fl.genes or fl.generic]):
+                if self.comp(fl, self.pool[fl.genes or fl.generic]) > 0:
                     self.pool[fl.genes or fl.generic] = fl
                     change = True
         return change
@@ -309,8 +314,8 @@ class Breeder:
                         if ths_acc == 0:
                             # Testing is useless
                             continue
-                        # The average needed steps to get to a result with this test.
-                        ths_level = ths_acc / (1 - ths_union)**2
+                        # The average needed steps to get to a result with this test. See Readme for details.
+                        ths_level = 1 / (1 - ths_union)
                         if ths_level < level:
                             level = ths_level
                             test_seed = seed

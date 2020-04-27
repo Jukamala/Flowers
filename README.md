@@ -71,40 +71,63 @@ You could argue that you need two yellows with 4 steps each. but since you can d
 in AC:NH you really just need 4 + 1 + 8 = 13 steps, including one duplication step.
 To avoid confusion this duplication step is excluded from the power.
 
-Getting the expected number of tries gets really complicated if you want to factor in testing:
-
-#### Proof
+Getting the expected number of tries gets really complicated if you want to factor in testing.\
+For a given step that breeds Flower A but also the Flower B the average tries is:\
+`K * (1 + pB / pA) + 1 / pA` where `K = 1 / (pA * P(Z in tA | F = A) + pB * P(Z in tb | F = B))`\
+`pA` and `pB` are the probability of the Flowers A and B, for `tA` and `tB` see below.
+#### Sketch of a Proof
 
 Let `X` be the tries needed to complete the step including testing\
-Let `Y` be the tries needed to finish testing (we can conclude if we have the correct or incorecct flower)\
-Let `Z` be the number of childs we have to test to get the correct one (e.g. `Z == 3` -> the 3th flower was correct)\
+Let `Y` be the tries needed to finish testing one flower (we can conclude if we have the correct or incorecct flower)\
+Let `Z` be the number of childs we have to test to get the correct one (e.g. `Z == 3` -> the 3th flower was correct)
 
-We can compute the average/exceptation of these random variables:
+We can compute the average/exceptation of these random variables:\
 For a breeding step with results in the two flowers `A`, `B`
-with probability `pA` and `pB` accordingly, and a test flower `t`,\
-let `tA` be the set of colors that `t`, `A` can breed and tB the set of colors that `tB` can breed.
+with probability `pA` and `pB` accordingly, and a test flower `t`,
+let `tA` be the set of colors that `t`, `A` can breed and tB the set of colors that `t`, `tB` can breed.\
 We can conclude that we have `A` when we test `A` or `B` if and only if `tA \ tB` is not empty.\
 We can finish testing if we get a child in `R := (tA \ tB) u (tB \ tA)`
 
-Let `F` be the first flower we get that is either A or B
-Let `F2` be the first flower we get (everything not only A or B)
-
-Let `Z` be the color that we get if we breed the first testable flower
-(note that this can be either A or B) to the test flower
-This obviously depends on `F`
+Let `F` be the first flower we get that is either A or B\
+Let `Z` be the color that we get if we breed the first testable flower `F`
+(this could be A or B) to the test flower.\
+(This obviously depends on `F`)
 
 The probability that we can finish testing after one try:
 ```
-P(Z in R)
-= P(F = A) * P(Z in R |F = A) + P(F = B) * P(Z in R|F = B)
-= pA * P(Z in tA | F = A) + pB * P(Z in tb | F = B)
+P(Z in R | F = A or F = B)
+= P(Z in R and (F = A or F = B)) / P(F = A or F = B)
+= (P(F = A) * P(Z in R |F = A) + P(F = B) * P(Z in R|F = B)) / (pA + pB)
+= (pA * P(Z in (tA \ tB) | F = A) + pB * P(Z in (tB \ tA) | F = B)) / (pA + pB)
 ```
-From that we can conclude the average tries for each test:\
-`K := E[Y] = 1 / P(Z in R)`\
+Because Y has a geometric distribution we can conclude the average tries for each test(*):\
+`K := E[Y] = 1 / P(Z in R | F = A or F = B)`\
 The probability that a flower which is either A or B is indeed A is:\
 `p* := P(F2 = A | F2 = A or F2 = B) = P(F2 = A) / P(F2 = A or F2 = B) = pA / (pA + pB)`\
-Therefore the average tests needed are:\
+Therefore the average tests needed are (again Z has geometric distribution):\
 `E[Z] = 1 / p* = (pA + pB) / pA`
 
-Finally the average tries needed is
-`E[X] = E[Z] * E[Y] = K * (pA + pB) / pA = pB / pA`
+Finally the average tries needed to complete all tests is:\
+`E[Z] * E[Y] = K * (pA + pB) / pA =  K * (1 + pB / pA)`
+
+This can be than added to the on average `1/pA` tries to get the first Flower A:\
+`E[X] = K * (1 + pB / pA) + 1 / pA`
+
+##### (*) Remark
+This is a pretty big assumption that needs to be explained:\
+We use the fact that Y has geometric distribution with parameter P(Z in R | F = A or F = B)
+and Z has geometric distribution with parameter p*.\
+This modelling means in every try a child flower of the parents is randomly chosen which then has some random offspring
+with the test flower. In reality you don't use a new flower each time. The fact that the
+underlying genes of the flower can't change influence the probabilities.
+A more accurate modelling procedure would be:\
+Randomly chose a flower. Test it until you find a result. Chose next flower.
+The problem with this is that you get trapped in an infinite loop when you can only identify correct flowers
+but can't detect wrong ones (e.g. Test: if a yellow can be bred it is correct).
+In practice you will get a handful of flowers in a field were they wait to be tested.
+One day on of them turns out correct. We can model like this:
+Randomly chose one of the flowers on the field to have offspring. Generate random offspring.
+An exact modelling of this would be to complicated but it is not far away from our model:
+We can assume we get a certain flower in our field with the same chances that we get
+a certain flower from the parents.
+
