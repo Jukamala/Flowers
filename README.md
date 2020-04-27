@@ -30,6 +30,13 @@ You can change the order, combine them cleverly or think of any other scoring.
 
 ##### Once you specify the order the programm does the rest and creates the routes you desire
 
+Keep in mind: The algorithm only breeds flowers whose genes are known. This can get in the way of
+some easy routes.
+(e.g. red cosmo + yellow cosmo = orange cosmo. This orange can be one of two genes.
+You can still breed this orange cosmo with itself to get a black cosmo (parent gene does not matter that much))
+Black Cosmos are the only flower type where this seems to play a role.
+
+
 ### Some optimal paths and other results:
 In `paths_simple.txt` you can find the optimal paths for all colors.\
 In `hybrids_simple.txt` you can find the optimal path for all possible hybrids.
@@ -73,19 +80,20 @@ To avoid confusion this duplication step is excluded from the power.
 
 Getting the expected number of tries gets really complicated if you want to factor in testing.\
 For a given step that breeds Flower A but also the Flower B the average tries is:\
-`K * (1 + pB / pA) + 1 / pA` where `K = 1 / (pA * P(Z in tA | F = A) + pB * P(Z in tb | F = B))`\
+`K * (1 + pB / pA) + 1 / pA` where `K = 1 / (pA * P(Z in tA | F = A) + pB * P(Z in tb | F = B))` is the test level\
 `pA` and `pB` are the probability of the Flowers A and B, for `tA` and `tB` see below.
+
 #### Sketch of a Proof
 
-Let `X` be the tries needed to complete the step including testing\
-Let `Y` be the tries needed to finish testing one flower (we can conclude if we have the correct or incorecct flower)\
+Let `X` be the tries needed to complete the whole step including testing\
+Let `Y` be the tries needed to finish testing of one flower (we can conclude if we have the correct or incorecct flower)\
 Let `Z` be the number of childs we have to test to get the correct one (e.g. `Z == 3` -> the 3th flower was correct)
 
 We can compute the average/exceptation of these random variables:\
-For a breeding step with results in the two flowers `A`, `B`
+For a breeding step which results in the two flowers `A`, `B`
 with probability `pA` and `pB` accordingly, and a test flower `t`,
 let `tA` be the set of colors that `t`, `A` can breed and tB the set of colors that `t`, `tB` can breed.\
-We can conclude that we have `A` when we test `A` or `B` if and only if `tA \ tB` is not empty.\
+We can conclude that we have `A` from testing on `A` or `B` if and only if `tA \ tB` is not empty.\
 We can finish testing if we get a child in `R := (tA \ tB) u (tB \ tA)`
 
 Let `F` be the first flower we get that is either A or B\
@@ -102,7 +110,7 @@ P(Z in R | F = A or F = B)
 ```
 Because Y has a geometric distribution we can conclude the average tries for each test(*):\
 `K := E[Y] = 1 / P(Z in R | F = A or F = B)`\
-The probability that a flower which is either A or B is indeed A is:\
+The probability that a flower which is either A or B is indeed A:\
 `p* := P(F2 = A | F2 = A or F2 = B) = P(F2 = A) / P(F2 = A or F2 = B) = pA / (pA + pB)`\
 Therefore the average tests needed are (again Z has geometric distribution):\
 `E[Z] = 1 / p* = (pA + pB) / pA`
