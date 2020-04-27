@@ -77,11 +77,14 @@ class Flower:
 
     def prnt(self):
         genes = self.genes or "Generic"
-        gene_str = "%10s" % str(genes) if self.typ != 'rose' else "%13s" % str(genes)
+        gene_str = "%9s" % str(genes) if self.typ != 'rose' else "%12s" % str(genes)
+        ac_cols = ",".join([self.color_dict[c] for c in self.ac_cols])\
+            if self.ac_cols is not None and len(self.ac_cols) > 0 else ""
+        rej_cols = "not {%s}" % ",".join([self.color_dict[c] for c in self.ac_cols])\
+            if self.rej_cols is not None and len(self.rej_cols) > 0 else ""
         col = self.color_dict[self.generic if self.generic is not None else int(get_color(self.genes, self.typ))]
-        test_str = "" if self.test_seed is None else " [alt:%s breed with %s for %s%s]" %\
-                                                     (self.alt, self.test_seed, self.ac_cols,
-                                                      "" if len(self.rej_cols) == 0 else " not %s" % self.rej_cols)
+        test_str = "" if self.test_seed is None else " [alt:%s breed with %s for {%s}%s]" %\
+                                                     (self.alt, self.test_seed, ac_cols, rej_cols)
         chance_str = "" if self.p is None else " [%s %%]" % (int(100 * self.p) if (100 * self.p) % 1 < 0.01 else
                                                              "%.1f" % (100 * self.p))
         return "<%s | %6s | %d %2d <- %s%s%s>" %\
@@ -230,7 +233,7 @@ class Breeder:
                       power=fl1.power + (fl2.power if fl1.genes != fl2.genes else 0) + 1/pr,
                       parent_genes=(fl1.genes, fl2.genes), tests=fl1.tests + fl2.tests, p=pr)
                for ch, pr in zip(childs, probs) if get_color(tuple(ch), self.typ) in unique_cols]
-        many_cols = [c for c in cnts if cnts[c] >= 1]
+        many_cols = [c for c in cnts if cnts[c] > 1]
 
         # Generic colors
         col_chances = dict()
@@ -451,7 +454,16 @@ if __name__ == '__main__':
 
     for typ in seeds.keys():
         print(typ)
-        br = Breeder(typ=typ)
+        br = Breeder(typ=typ, test=3)
+        br.all_pos()
+        br.result(big=True)
+        print('*****')
+
+    print('~~~~~')
+
+    for typ in seeds.keys():
+        print(typ)
+        br = Breeder(typ=typ, test=0)
         br.all_pos()
         br.result(big=True)
         print('*****')
