@@ -82,10 +82,10 @@ A try in this context is what happens when two flowers make on child flower.
 Imagine a route that consists of two steps:
 
 + Purple + Purple -> Yellow (25 %)
-+ Yellow + Yellow -> red (50 %)
++ Yellow + Yellow -> red (12.5 %)
 
-If you get yellow with a chance of 1:4 / 25 % than on average you need 4 tries. (see Expectation of a binomial distributed random variable)
-If after that deeper in your route you get another flower with 1:8 you need 8 tries average.
+If you get yellow with a chance of 1:4 / 25 % than on average you need 4 tries (see Expectation of a binomial distributed random variable).
+After that you get red with 1:8 / 12.5 % -  you need 8 tries average.
 
 This means the power of this route is 4 + 8 = 12.
 You could argue that you need two yellows with 4 steps each. but since you can duplicate flowers
