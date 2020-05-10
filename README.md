@@ -153,7 +153,3 @@ An exact modelling of this would be to complicated but it is not far away from o
 We can assume we get a certain flower in our field with the same chances that we get
 a certain flower from the parents.
 
-#### TODOS
-
-Make lists that also include the mystery island flowers.
-
