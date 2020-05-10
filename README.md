@@ -1,4 +1,4 @@
-# Optimal flower breding routes for Animal Crossing: New Horizons.
+# Optimal flower breeding routes for Animal Crossing: New Horizons.
 
 Breeding flowers in Animal Crossing can be quite complicated.
 Especially some hybrids are hard to get by (the best example herefore is the blue roses which is notoriously difficult to bred).
