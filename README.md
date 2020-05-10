@@ -42,6 +42,10 @@ In `paths_simple.txt` you can find the optimal paths for all colors.\
 In `hybrids_simple.txt` you can find the optimal path for all possible hybrids.
 
 If you allow testing steps you can find even better routes in `paths.txt` and `hybrids.txt` respectively.
+If you have access to the mystery island flowers you can find the best routes in `paths_island.txt` and `hybrids_island.txt`.
+If you only care about short routes because you will use a massive amount of flowers anyway
+you will find the shortest routes in `paths_short` and `hybrids_short`
+
 
 Entries are of the form:\
 `<{Genes} | {Color} | {Steps} {Power} <- {parent genes} {testing} [{chances}]>`

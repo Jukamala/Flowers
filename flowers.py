@@ -2,7 +2,7 @@ import numpy as np
 from collections import Counter
 
 
-def average_breed_tries_comp(fl1, fl2):
+def average_breed_tries_comp(fl1, fl2, order=None):
     """
     Create an order on flowers which prefers flowers that
     need a smaller number of breeding tries to breed (in average).
@@ -13,7 +13,8 @@ def average_breed_tries_comp(fl1, fl2):
             0  if they are equal
             -1 else
     """
-    order = ['power', 'tests', 'step']
+    if order is None:
+        order = ['power', 'tests', 'step']
     for crit in order:
         if getattr(fl1, crit) < getattr(fl2, crit):
             return 1
@@ -85,7 +86,7 @@ class Flower:
                                              (p, self.color_dict[int(get_color(p, self.typ))]), self.parent_genes))
         ac_cols = ",".join([self.color_dict[c] for c in self.ac_cols])\
             if self.ac_cols is not None and len(self.ac_cols) > 0 else ""
-        rej_cols = "not {%s}" % ",".join([self.color_dict[c] for c in self.ac_cols])\
+        rej_cols = " not {%s}" % ",".join([self.color_dict[c] for c in self.ac_cols])\
             if self.rej_cols is not None and len(self.rej_cols) > 0 else ""
         col = self.color_dict[self.generic if self.generic is not None else int(get_color(self.genes, self.typ))]
         test_str = "" if self.test_seed is None else " [alt:%s breed with %s for {%s}%s]" %\
@@ -424,19 +425,17 @@ seeds = {'rose': [Flower('rose', (0, 0, 1, 0)), Flower('rose', (0, 2, 2, 0)), Fl
          'windflower': [Flower('windflower', (0, 0, 1)), Flower('windflower', (0, 2, 2)),
                         Flower('windflower', (2, 0, 2))]}
 
-island_seeds = {'rose': [Flower('rose', (0, 0, 1, 0)), Flower('rose', (0, 2, 2, 0)), Flower('rose', (2, 0, 2, 1))],
-         'cosmos': [Flower('cosmos', (0, 0, 1)), Flower('cosmos', (0, 2, 1)), Flower('cosmos', (2, 0, 0))],
-         'lilly': [Flower('lilly', (0, 0, 2)), Flower('lilly', (0, 2, 0)), Flower('lilly', (2, 0, 1))],
-         'pansy': [Flower('pansy', (0, 0, 1)), Flower('pansy', (0, 2, 2)), Flower('pansy', (2, 0, 2))],
-         'hyacinth': [Flower('hyacinth', (0, 0, 1)), Flower('hyacinth', (0, 2, 2)), Flower('hyacinth', (2, 0, 1))],
-         'tulip': [Flower('tulip', (0, 0, 1)), Flower('tulip', (0, 2, 0)), Flower('tulip', (2, 0, 1))],
-         'mum': [Flower('mum', (0, 0, 1)), Flower('mum', (0, 2, 2)), Flower('mum', (2, 0, 2))],
-         'windflower': [Flower('windflower', (0, 0, 1)), Flower('windflower', (0, 2, 2)),
-                        Flower('windflower', (2, 0, 2))]}
+island_seeds = {'rose': [Flower('rose', (2, 2, 1, 1)), Flower('rose', (2, 0, 0, 2))],
+         'cosmos': [Flower('cosmos', (2, 1, 1)), Flower('cosmos', (1, 1, 2))],
+         'lilly': [Flower('lilly', (2, 2, 1)), Flower('lilly', (2, 1, 2)), Flower('lilly', (2, 1, 0))],
+         'pansy': [Flower('pansy', (2, 2, 1)), Flower('pansy', (1, 0, 0))],
+         'hyacinth': [Flower('hyacinth', (2, 1, 2)), Flower('hyacinth', (1, 0, 1)), Flower('hyacinth', (1, 2, 2))],
+         'tulip': [Flower('tulip', (1, 0, 1)), Flower('tulip', (1, 2, 0)), Flower('tulip', (2, 1, 0))],
+         'mum': [Flower('mum', (1, 1, 0)), Flower('mum', (2, 1, 1))],
+         'windflower': [Flower('windflower', (2, 2, 1)), Flower('windflower', (1, 0, 0))]}
 
 
-if __name__ == '__main__':
-
+def with_testing():
     # Optimal routes with testing
     for typ in seeds.keys():
         print(typ)
@@ -447,6 +446,18 @@ if __name__ == '__main__':
 
     print('~~~~~')
 
+    # all hybrids with testing
+    for typ in seeds.keys():
+        print(typ)
+        br = Breeder(typ=typ, test=3)
+        br.all_pos()
+        br.result(big=True)
+        print('*****')
+
+    print('*****')
+
+
+def without_testing():
     # Optimal routes without testing
     for typ in seeds.keys():
         print(typ)
@@ -457,19 +468,66 @@ if __name__ == '__main__':
 
     print('~~~~~')
 
-    for typ in seeds.keys():
-        print(typ)
-        br = Breeder(typ=typ, test=3)
-        br.all_pos()
-        br.result(big=True)
-        print('*****')
-
-    print('~~~~~')
-
+    # all hybrids without testing
     for typ in seeds.keys():
         print(typ)
         br = Breeder(typ=typ, test=0)
         br.all_pos()
         br.result(big=True)
         print('*****')
+
+    print('*****')
+
+
+def with_islands():
+    # Optimal including islands
+    for typ in seeds.keys():
+        print(typ)
+        br = Breeder(typ=typ, test=3, pool=seeds[typ] + island_seeds[typ])
+        br.all_pos()
+        br.result()
+        print('*****')
+
+    print('~~~~~')
+
+    # Optimal including islands all hybrids
+    for typ in seeds.keys():
+        print(typ)
+        br = Breeder(typ=typ, test=3, pool=seeds[typ] + island_seeds[typ])
+        br.all_pos()
+        br.result(big=True)
+        print('*****')
+
+    print('~~~~~')
+
+def shortest():
+    short_order = ['step', 'tests', 'power']
+    comp = lambda x, y: average_breed_tries_comp(x, y, order=short_order)
+
+    # Optimal routes with testing
+    for typ in seeds.keys():
+        print(typ)
+        br = Breeder(typ=typ, test=3, comp=comp)
+        br.all_pos()
+        br.result()
+        print('*****')
+
+    print('~~~~~')
+
+    # all hybrids with testing
+    for typ in seeds.keys():
+        print(typ)
+        br = Breeder(typ=typ, test=3, comp=comp)
+        br.all_pos()
+        br.result(big=True)
+        print('*****')
+
+    print('*****')
+
+
+if __name__ == '__main__':
+    # with_testing()
+    # without_testing()
+    # with_islands()
+    shortest()
 

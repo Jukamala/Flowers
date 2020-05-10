@@ -1,0 +1,78 @@
+rose
+<(0, 0, 1, 0) |  white | 0  0 <- Seed>
+<(0, 2, 2, 0) | yellow | 0  0 <- Seed>
+<(2, 0, 2, 1) |    red | 0  0 <- Seed>
+<     Generic |   pink | 1  2 <- {(0, 0, 1, 0) -  white | (2, 0, 2, 1) -    red} [50 %]>
+<(1, 1, 2, 0) | orange | 1  2 <- {(0, 2, 2, 0) - yellow | (2, 0, 2, 1) -    red} [50 %]>
+<(0, 0, 0, 0) | purple | 1  4 <- {(0, 0, 1, 0) -  white | (0, 0, 1, 0) -  white} [25 %]>
+<(2, 0, 2, 0) |  black | 1  4 <- {(2, 0, 2, 1) -    red | (2, 0, 2, 1) -    red} [25 %]>
+<(2, 2, 0, 0) |   blue | 3 80 <- {(1, 1, 1, 0) -    red | (1, 1, 1, 0) -    red} [1.6 %]>
+-----
+<(1, 1, 1, 0) |    red | 2 16 <- {(0, 2, 2, 0) - yellow | (1, 0, 1, 0) -    red} [25 %]>
+<(1, 0, 1, 0) |    red | 1 12 <- {(0, 0, 1, 0) -  white | (2, 0, 2, 1) -    red} [alt:(1, 0, 2, 0) breed with (0, 2, 2, 0) for {white,red}] [25 %]>
+*****
+cosmos
+<(0, 0, 1) |  white | 0  0 <- Seed>
+<(0, 2, 1) | yellow | 0  0 <- Seed>
+<(2, 0, 0) |    red | 0  0 <- Seed>
+<  Generic |   pink | 1  1 <- {(0, 0, 1) -  white | (2, 0, 0) -    red} [100 %]>
+<  Generic | orange | 1  1 <- {(0, 2, 1) - yellow | (2, 0, 0) -    red} [100 %]>
+<  Generic |  black | 2 55 <- {(1, 1, 1) - orange | (1, 1, 1) - orange} [4.7 %]>
+-----
+<(1, 1, 1) | orange | 1 34 <- {(0, 2, 1) - yellow | (2, 0, 0) -    red} [alt:(1, 1, 0) breed with (0, 2, 1) for {white,pink}] [50 %]>
+*****
+lilly
+<(0, 0, 2) |  white | 0  0 <- Seed>
+<(0, 2, 0) | yellow | 0  0 <- Seed>
+<(2, 0, 1) |    red | 0  0 <- Seed>
+<(1, 0, 1) |   pink | 1  2 <- {(0, 0, 2) -  white | (2, 0, 1) -    red} [50 %]>
+<(1, 1, 0) | orange | 1  2 <- {(0, 2, 0) - yellow | (2, 0, 1) -    red} [50 %]>
+<(2, 0, 0) |  black | 1  4 <- {(2, 0, 1) -    red | (2, 0, 1) -    red} [25 %]>
+*****
+pansy
+<(0, 0, 1) |  white | 0  0 <- Seed>
+<(0, 2, 2) | yellow | 0  0 <- Seed>
+<(2, 0, 2) |    red | 0  0 <- Seed>
+<(1, 1, 2) | orange | 1  1 <- {(0, 2, 2) - yellow | (2, 0, 2) -    red} [100 %]>
+<(0, 0, 0) |   blue | 1  4 <- {(0, 0, 1) -  white | (0, 0, 1) -  white} [25 %]>
+<  Generic | purple | 3 25 <- {(1, 1, 1) - orange | (1, 1, 1) - orange} [6.2 %]>
+-----
+<(1, 1, 1) | orange | 2  9 <- {(0, 0, 0) -   blue | (1, 1, 2) - orange} [25 %]>
+*****
+hyacinth
+<(0, 0, 1) |  white | 0  0 <- Seed>
+<(0, 2, 2) | yellow | 0  0 <- Seed>
+<(2, 0, 1) |    red | 0  0 <- Seed>
+<(1, 0, 1) |   pink | 1  2 <- {(0, 0, 1) -  white | (2, 0, 1) -    red} [50 %]>
+<(1, 1, 2) | orange | 1  2 <- {(0, 2, 2) - yellow | (2, 0, 1) -    red} [50 %]>
+<(0, 0, 0) |   blue | 1  4 <- {(0, 0, 1) -  white | (0, 0, 1) -  white} [25 %]>
+<(2, 2, 2) | purple | 2 18 <- {(1, 1, 2) - orange | (1, 1, 2) - orange} [6.2 %]>
+*****
+tulip
+<(0, 0, 1) |  white | 0  0 <- Seed>
+<(0, 2, 0) | yellow | 0  0 <- Seed>
+<(2, 0, 1) |    red | 0  0 <- Seed>
+<(1, 0, 1) |   pink | 1  2 <- {(0, 0, 1) -  white | (2, 0, 1) -    red} [50 %]>
+<(1, 1, 0) | orange | 1  2 <- {(0, 2, 0) - yellow | (2, 0, 1) -    red} [50 %]>
+<(2, 0, 0) |  black | 1  4 <- {(2, 0, 1) -    red | (2, 0, 1) -    red} [25 %]>
+<(2, 2, 0) | purple | 2 18 <- {(1, 1, 0) - orange | (1, 1, 0) - orange} [6.2 %]>
+*****
+mum
+<(0, 0, 1) |  white | 0  0 <- Seed>
+<(0, 2, 2) | yellow | 0  0 <- Seed>
+<(2, 0, 2) |    red | 0  0 <- Seed>
+<  Generic |   pink | 1  1 <- {(0, 0, 1) -  white | (2, 0, 2) -    red} [100 %]>
+<(0, 0, 0) | purple | 1  4 <- {(0, 0, 1) -  white | (0, 0, 1) -  white} [25 %]>
+<(2, 2, 2) |  green | 2 17 <- {(1, 1, 2) - yellow | (1, 1, 2) - yellow} [6.2 %]>
+-----
+<(1, 1, 2) | yellow | 1  1 <- {(0, 2, 2) - yellow | (2, 0, 2) -    red} [100 %]>
+*****
+windflower
+<(0, 0, 1) |  white | 0  0 <- Seed>
+<(0, 2, 2) | orange | 0  0 <- Seed>
+<(2, 0, 2) |    red | 0  0 <- Seed>
+<(1, 1, 2) |   pink | 1  1 <- {(0, 2, 2) - orange | (2, 0, 2) -    red} [100 %]>
+<(0, 0, 0) |   blue | 1  4 <- {(0, 0, 1) -  white | (0, 0, 1) -  white} [25 %]>
+<  Generic | purple | 3 25 <- {(1, 1, 1) -   pink | (1, 1, 1) -   pink} [6.2 %]>
+-----
+<(1, 1, 1) |   pink | 2  9 <- {(0, 0, 0) -   blue | (1, 1, 2) -   pink} [25 %]>
