@@ -84,7 +84,7 @@ Imagine a route that consists of two steps:
 + Purple + Purple -> Yellow (25 %)
 + Yellow + Yellow -> red (50 %)
 
-If you get yellow with a chance of 1:4 / 25 % than on average you need 4 tries. (*) see Expectation of a binomial distributed random variable)
+If you get yellow with a chance of 1:4 / 25 % than on average you need 4 tries. (see Expectation of a binomial distributed random variable)
 If after that deeper in your route you get another flower with 1:8 you need 8 tries average.
 
 This means the power of this route is 4 + 8 = 12.
